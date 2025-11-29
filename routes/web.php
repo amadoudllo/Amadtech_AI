@@ -8,7 +8,7 @@ use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
 use Laravel\Fortify\Http\Controllers\RegisteredUserController;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect('/chat');
 })->name('home');
 
 // Custom Auth Routes (pure PHP views without Vite)
@@ -40,6 +40,12 @@ Route::get('/chat', [ChatController::class, 'show'])
 Route::post('/chat/send', [ChatController::class, 'sendMessage'])
     ->middleware(\App\Http\Middleware\RequireLoginForChatAfterThreeRequests::class)
     ->name('chat.send');
+
+// API endpoints for conversation management - NO middleware (allow unlimited guest access for reading history)
+Route::get('/api/chat/conversations', [ChatController::class, 'getConversations']);
+Route::get('/api/chat/conversations/{id}/messages', [ChatController::class, 'getConversationMessages']);
+Route::put('/api/chat/conversations/{id}', [ChatController::class, 'updateConversation'])->middleware('auth');
+Route::delete('/api/chat/conversations/{id}', [ChatController::class, 'deleteConversation']);
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])

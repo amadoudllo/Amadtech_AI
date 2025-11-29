@@ -29,6 +29,16 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+        $this->configureRedirectPaths();
+    }
+
+    /**
+     * Configure custom redirect paths after authentication.
+     */
+    private function configureRedirectPaths(): void
+    {
+        // Override the default home path to /chat
+        config(['fortify.home' => '/chat']);
     }
 
     /**
