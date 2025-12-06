@@ -246,3 +246,4 @@ header('Content-Type: text/html; charset=utf-8');
     </script>
 </body>
 </html>
+<?php /**PATH C:\xampp\htdocs\Amadtech_AI\resources\views/auth/login.blade.php ENDPATH**/ ?>

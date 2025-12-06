@@ -2,6 +2,7 @@
 
 namespace App\Actions\Fortify;
 
+use App\Models\EmailVerification;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -30,10 +31,26 @@ class CreateNewUser implements CreatesNewUsers
             'password' => $this->passwordRules(),
         ])->validate();
 
-        return User::create([
+        // Créer l'utilisateur SANS enregistrer dans la base de données (utilisateur temporaire)
+        $user = new User([
             'name' => $input['name'],
             'email' => $input['email'],
             'password' => $input['password'],
         ]);
+
+        // Créer un token de vérification d'email
+        $token = hash('sha256', $input['email'] . time() . random_bytes(32));
+        
+        // Enregistrer le token dans email_verifications (l'utilisateur n'existe pas encore dans users)
+        EmailVerification::create([
+            'email' => $input['email'],
+            'token' => $token,
+            'expires_at' => now()->addHours(24),
+        ]);
+
+        // Envoyer un email de confirmation
+        // À implémenter selon votre système de mail
+
+        return $user;
     }
 }

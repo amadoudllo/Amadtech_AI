@@ -4,8 +4,11 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Auth\VerifyEmailController;
+use App\Http\Controllers\Auth\AdminLoginController;
+use App\Http\Controllers\Admin\AdminDashboardController;
 use Laravel\Fortify\Http\Controllers\AuthenticatedSessionController;
-use Laravel\Fortify\Http\Controllers\RegisteredUserController;
 
 Route::get('/', function () {
     return redirect('/chat');
@@ -19,12 +22,28 @@ Route::middleware('guest:web')->group(function () {
     
     Route::post('/login', [AuthenticatedSessionController::class, 'store']);
     
-    Route::get('/register', function () {
-        return view('auth.register');
-    })->name('register');
+    // Registration routes
+    Route::get('/register', [RegisterController::class, 'showRegisterForm'])->name('register');
+    Route::post('/register', [RegisterController::class, 'register']);
     
-    Route::post('/register', [RegisteredUserController::class, 'store']);
+    // Email verification routes
+    Route::get('/verify-email', [RegisterController::class, 'showVerifyEmail'])->name('verify.email.show');
+    Route::post('/verify-email', [RegisterController::class, 'verifyEmail'])->name('verify.email');
+    Route::post('/resend-verification-email', [RegisterController::class, 'resendVerificationEmail'])->name('resend.verification.email');
 });
+
+// Route de vérification d'email (accessible sans authentification)
+Route::get('/verify-email/{token}', [VerifyEmailController::class, 'verify'])->name('verify.email.link');
+
+// Admin Login Routes
+Route::middleware(\App\Http\Middleware\AdminGuestOrAdmin::class)->group(function () {
+    Route::get('/admin/login', [AdminLoginController::class, 'showLoginForm'])->name('admin.login');
+    Route::post('/admin/login', [AdminLoginController::class, 'login'])->name('admin.login.post');
+});
+
+Route::post('/admin/logout', [AdminLoginController::class, 'logout'])
+    ->middleware('auth')
+    ->name('admin.logout');
 
 Route::post('/logout', function () {
     auth()->logout();
@@ -68,4 +87,19 @@ Route::middleware(['auth'])->group(function () {
             ),
         )
         ->name('two-factor.show');
+});
+
+// Admin routes - Protected by AdminMiddleware
+Route::middleware(['auth', \App\Http\Middleware\AdminMiddleware::class])->prefix('admin')->group(function () {
+    Route::get('/', [AdminDashboardController::class, 'dashboard'])->name('admin.dashboard');
+    Route::get('/users', [AdminDashboardController::class, 'users'])->name('admin.users');
+    Route::post('/users/{user}/role', [AdminDashboardController::class, 'updateUserRole'])->name('admin.user.role');
+    Route::post('/users/{user}/toggle-active', [AdminDashboardController::class, 'toggleUserActive'])->name('admin.user.toggle');
+    Route::post('/users/{user}/block', [AdminDashboardController::class, 'blockUser'])->name('admin.user.block');
+    Route::post('/users/{user}/unblock', [AdminDashboardController::class, 'unblockUser'])->name('admin.user.unblock');
+    Route::post('/users/{user}/delete', [AdminDashboardController::class, 'deleteUser'])->name('admin.user.delete');
+    Route::get('/settings', [AdminDashboardController::class, 'settings'])->name('admin.settings');
+    Route::post('/settings', [AdminDashboardController::class, 'updateSettings'])->name('admin.settings.update');
+    Route::get('/logs/requests', [AdminDashboardController::class, 'requestLogs'])->name('admin.logs.requests');
+    Route::get('/logs/activity', [AdminDashboardController::class, 'activityLogs'])->name('admin.logs.activity');
 });

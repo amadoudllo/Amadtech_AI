@@ -803,3 +803,4 @@ header('Content-Type: text/html; charset=utf-8');
 
 </body>
 </html>
+<?php /**PATH C:\xampp\htdocs\Amadtech_AI\resources\views/chat/index.blade.php ENDPATH**/ ?>
